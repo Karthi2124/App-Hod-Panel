@@ -7,7 +7,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView edges={['top','bottom']} style={styles.container}>
-        <StatusBar barStyle="dark-content" />
+        <StatusBar backgroundColor="#13192d" barStyle="light-content" />
         <AppNavigator />
       </SafeAreaView>
     </SafeAreaProvider>
@@ -16,7 +16,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    color:'#fff',
     flex: 1,
+    backgroundColor: '#13192d',
   },
 });

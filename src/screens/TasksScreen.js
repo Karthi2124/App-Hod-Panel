@@ -19,7 +19,7 @@ export default TasksScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0f172a"
+    backgroundColor: "#fff"
   },
 
   body: {
@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
   },
 
   text: {
-    color: "#fff",
+    color: "#0f172a",
     fontSize: 18
   }
 });

@@ -10,6 +10,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native-documents/picker": "^12.0.1",
+    "@react-native-picker/picker": "^2.11.4",
     "@react-native/new-app-screen": "0.84.1",
     "@react-navigation/bottom-tabs": "^7.15.5",
     "@react-navigation/native": "^7.1.33",
@@ -17,6 +19,7 @@
     "axios": "^1.13.6",
     "react": "19.2.3",
     "react-native": "0.84.1",
+    "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^2.30.0",
     "react-native-reanimated": "^4.2.2",
     "react-native-safe-area-context": "^5.7.0",
