@@ -25,9 +25,6 @@ const API_BASE_URL = 'https://lunular-vernia-inexcusably.ngrok-free.dev/hod-pane
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
 });
 
 const UsersScreen = () => {
@@ -235,6 +232,19 @@ const UsersScreen = () => {
     return Math.ceil(total / rowsPerPage);
   };
 
+  const getTotalRows = () => {
+  switch (activeTab) {
+    case 'teachers':
+      return getFilteredTeachers().length;
+    case 'students':
+      return getFilteredStudents().length;
+    case 'lab-incharges':
+      return getFilteredLabIncharges().length;
+    default:
+      return getAllUsers().length;
+  }
+};
+
   // CRUD Operations
   const handleAddTeacher = async () => {
     try {
@@ -387,7 +397,8 @@ const UsersScreen = () => {
           formData.append(key, teacherForm[key]);
         }
       });
-      formData.append('id', editingTeacher.id);
+      formData.append('teacher_id', editingTeacher.id);
+      formData.append('user_id', editingTeacher.user_id);
       formData.append('edit_teacher', 'true');
 
       const response = await api.post('/update_teacher.php', formData, {
@@ -419,7 +430,8 @@ const UsersScreen = () => {
           formData.append(key, studentForm[key]);
         }
       });
-      formData.append('id', editingStudent.id);
+      formData.append('student_id', editingStudent.id);
+formData.append('user_id', editingStudent.user_id);
       formData.append('edit_student', 'true');
 
       const response = await api.post('/update_student.php', formData, {
@@ -451,7 +463,8 @@ const UsersScreen = () => {
           formData.append(key, labInchargeForm[key]);
         }
       });
-      formData.append('id', editingLabIncharge.id);
+      formData.append('incharge_id', editingLabIncharge.id);
+      formData.append('user_id', editingLabIncharge.user_id);
       formData.append('edit_lab_incharge', 'true');
 
       const response = await api.post('/update_lab_incharge.php', formData, {
@@ -864,14 +877,68 @@ const UsersScreen = () => {
                 <Text style={styles.statusText}>Active</Text>
               </View>
             </View>
-            <View style={[styles.cell, styles.actionsCell, { width: getColumnWidth('Actions') }]}>
-              <TouchableOpacity style={styles.actionButton}>
-                <Icon name="pen-to-square" size={16} color="#3b82f6" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Icon name="trash-can" size={16} color="#ef4444" />
-              </TouchableOpacity>
-            </View>
+<View style={[styles.cell, styles.actionsCell, { width: getColumnWidth('Actions') }]}>
+
+  {/* Edit */}
+  <TouchableOpacity
+    style={styles.actionButton}
+    onPress={() => {
+      if (item.user_type === 'teacher') {
+        setEditingTeacher(item);
+        setTeacherForm({
+          full_name: item.full_name,
+          user_id: item.user_id,
+          qualification: item.qualification,
+          specialization: item.specialization,
+          joining_date: item.joining_date,
+          year: item.year,
+        });
+        setShowEditTeacherModal(true);
+      } 
+      else if (item.user_type === 'student') {
+        setEditingStudent(item);
+        setStudentForm({
+          full_name: item.student_name,
+          roll_number: item.roll_number,
+          year: item.year,
+          batch: item.batch,
+          attendance: item.attendance?.toString() || '0',
+        });
+        setShowEditStudentModal(true);
+      } 
+      else {
+        setEditingLabIncharge(item);
+        setLabInchargeForm({
+          incharge_name: item.incharge_name,
+          user_id: item.user_id,
+          lab_id: item.lab_id,
+          assigned_date: item.assigned_date,
+          status: item.status,
+        });
+        setShowEditLabInchargeModal(true);
+      }
+    }}
+  >
+    <Icon name="pen-to-square" size={16} color="#3b82f6" />
+  </TouchableOpacity>
+
+  {/* Delete */}
+  <TouchableOpacity
+    style={styles.actionButton}
+    onPress={() =>
+      handleDeleteUser(
+        item.user_type === 'lab-incharge'
+          ? 'lab_incharge'
+          : item.user_type,
+        item.id,
+        item.display_name
+      )
+    }
+  >
+    <Icon name="trash-can" size={16} color="#ef4444" />
+  </TouchableOpacity>
+
+</View>
           </View>
         );
     }
@@ -903,24 +970,47 @@ const UsersScreen = () => {
             <Text style={styles.title}>User Management</Text>
             <Text style={styles.subtitle}>Manage teachers, students, and lab incharges</Text>
           </View>
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.bulkButton} onPress={() => setShowBulkUploadModal(true)}>
-              <Icon name="upload" size={14} color="#374151" />
-              <Text style={styles.bulkButtonText}>Bulk Upload</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.addTeacherButton} onPress={() => setShowAddTeacherModal(true)}>
-              <Icon name="chalkboard-user" size={14} color="#fff" />
-              <Text style={styles.addButtonText}>Add Teacher</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.addStudentButton} onPress={() => setShowAddStudentModal(true)}>
-              <Icon name="user-graduate" size={14} color="#fff" />
-              <Text style={styles.addButtonText}>Add Student</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.addLabInchargeButton} onPress={() => setShowAddLabInchargeModal(true)}>
-              <Icon name="flask" size={14} color="#fff" />
-              <Text style={styles.addButtonText}>Add Lab Incharge</Text>
-            </TouchableOpacity>
-          </View>
+<View style={styles.actionButtons}>
+
+  {/* First Row */}
+  <View style={styles.buttonRow}>
+    <TouchableOpacity
+      style={styles.bulkButton}
+      onPress={() => setShowBulkUploadModal(true)}
+    >
+      <Icon name="upload" size={14} color="#374151" />
+      <Text style={styles.bulkButtonText}>Bulk Upload</Text>
+    </TouchableOpacity>
+  </View>
+
+  {/* Second Row */}
+  <View style={styles.buttonRow}>
+    <TouchableOpacity
+      style={styles.addTeacherButton}
+      onPress={() => setShowAddTeacherModal(true)}
+    >
+      <Icon name="chalkboard-user" size={14} color="#fff" />
+      <Text style={styles.addButtonText}>Add Teacher</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={styles.addStudentButton}
+      onPress={() => setShowAddStudentModal(true)}
+    >
+      <Icon name="user-graduate" size={14} color="#fff" />
+      <Text style={styles.addButtonText}>Add Student</Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity
+      style={styles.addLabInchargeButton}
+      onPress={() => setShowAddLabInchargeModal(true)}
+    >
+      <Icon name="flask" size={14} color="#fff" />
+      <Text style={styles.addButtonText}>Add Lab Incharge</Text>
+    </TouchableOpacity>
+  </View>
+
+</View>
         </View>
 
         {/* Messages */}
@@ -1185,10 +1275,10 @@ const UsersScreen = () => {
                     style={styles.picker}
                   >
                     <Picker.Item label="Select Year" value="" />
-                    <Picker.Item label="Year 1" value="1" />
-                    <Picker.Item label="Year 2" value="2" />
-                    <Picker.Item label="Year 3" value="3" />
-                    <Picker.Item label="Year 4" value="4" />
+                    <Picker.Item label="Year 1" value="1"/>
+                    <Picker.Item label="Year 2" value="2"/>
+                    <Picker.Item label="Year 3" value="3"/>
+                    <Picker.Item label="Year 4" value="4"/>
                   </Picker>
                 </View>
               </View>
@@ -1248,7 +1338,7 @@ const UsersScreen = () => {
                     onValueChange={value => setStudentForm({ ...studentForm, year: value })}
                     style={styles.picker}
                   >
-                    <Picker.Item label="Select Year" value="" />
+                    <Picker.Item label="Select Year" value=""/>
                     <Picker.Item label="Year 1" value="1" />
                     <Picker.Item label="Year 2" value="2" />
                     <Picker.Item label="Year 3" value="3" />
@@ -2203,6 +2293,12 @@ headerActionsText: {
     textAlign: 'center',
     marginTop: 8,
   },
+  buttonRow: {
+  flexDirection: 'row',
+  gap: 8,
+  marginBottom: 8,
+  flexWrap: 'wrap',
+},
 });
 
 export default UsersScreen;
